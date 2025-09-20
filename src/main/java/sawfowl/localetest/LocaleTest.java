@@ -26,9 +26,11 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import sawfowl.localeapi.api.ConfigTypes;
 import sawfowl.localeapi.api.LocaleService;
+import sawfowl.localeapi.api.LocalesList;
 import sawfowl.localeapi.api.Logger;
-import sawfowl.localeapi.api.PluginLocale;
+import sawfowl.localeapi.api.config.locale.PluginLocale;
 import sawfowl.localeapi.api.event.LocaleServiseEvent;
+import sawfowl.localeapi.api.serializetools.ItemStackSerializerType;
 import sawfowl.localeapi.api.serializetools.itemstack.SerializedItemStack;
 
 @Plugin("localetest")
@@ -40,6 +42,7 @@ public class LocaleTest {
 	private boolean saveProperties = false;
 	private LocaleService api;
 	private static PluginContainer pluginContainer;
+	private LocalesList locales;
 
 	public LocaleService getAPI() {
 		return api;
@@ -58,8 +61,9 @@ public class LocaleTest {
 	@Listener
 	public void onLocaleServisePostEvent(LocaleServiseEvent.Construct event) {
 		api = event.getLocaleService();
+		locales = api.createLocales(pluginContainer);
 		try {
-			api.setItemStackSerializerVariant(pluginContainer, 2);
+			api.setItemStackSerializerVariant(pluginContainer, ItemStackSerializerType.JSON);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -79,56 +83,43 @@ public class LocaleTest {
 		if(!api.localesExist(pluginContainer)) {
 			// When creating localizations, be sure to create a default localization - Locales.DEFAULT.
 			// If the above check is performed, the localization creation will not be performed because it is unnecessary.
-			api.createPluginLocale(pluginContainer, ConfigTypes.HOCON, Locales.DEFAULT);
-			api.createPluginLocale(pluginContainer, ConfigTypes.YAML, Locales.EN_CA);
-			api.createPluginLocale("localetest", ConfigTypes.JSON, Locales.EN_GB);
-			api.createPluginLocale("localetest", ConfigTypes.PROPERTIES, Locales.RU_RU);
-			api.saveAssetLocales(pluginContainer);
+			locales.createSimpleTranslation(ConfigTypes.HOCON, Locales.DEFAULT);
+			locales.createSimpleTranslation(ConfigTypes.YAML, Locales.EN_CA);
+			locales.createSimpleTranslation(ConfigTypes.JSON, Locales.EN_GB);
+			locales.createSimpleTranslation(ConfigTypes.HOCON, Locales.RU_RU);
+			locales.saveAssetLocales();
 		}
-		// Test write and save default locale - en-US.
-		/*try {
-			getLocaleUtil(Locales.DEFAULT).setLocaleReference(LocaleConfig.class);
-			getLocaleUtil(Locales.DEFAULT).saveLocaleNode();
-		} catch (ConfigurateException e) {
-			e.printStackTrace();
-		}
-		/*boolean checkHocon = updateIsSave(this.saveHocon, getLocaleUtil(Locales.DEFAULT).checkString("&a&lDefault locale. &4&lTest String HOCON config", "Test comment", "TestPath"));
-		checkHocon = updateIsSave(this.saveHocon, getLocaleUtil(Locales.DEFAULT).checkString("&a&lDefault locale. Checking the string existing only in it.", "Test comment", "TestPath1"));
-		checkHocon = updateIsSave(this.saveHocon,  getLocaleUtil(Locales.DEFAULT).checkComponent(true, serialize("&a&lDefault locale. &4&lTest JSON string HOCON config"), "Test comment", "TestComponentPath"));
-		checkHocon = updateIsSave(this.saveHocon, getLocaleUtil(Locales.DEFAULT).checkListStrings(Arrays.asList("&a&lDefault locale. &4&lTest Strings HOCON config", "String 2"), "Test comment", "TestListPath"));
-		checkHocon = updateIsSave(this.saveHocon,  getLocaleUtil(Locales.DEFAULT).checkListComponents(true, Arrays.asList(serialize("&a&lDefault locale. &4&lTest JSON strings HOCON config"), serialize("Component String 2")), "Test comment", "TestListComponentsPath"));
-		if(checkHocon)  getLocaleUtil(Locales.DEFAULT).saveLocaleNode();*/
 
-		getLocaleUtil(Locales.DEFAULT).saveLocaleNode();
+		getLocaleUtil(Locales.DEFAULT).save();
 		// Test write and save locale - en-CA.
-		boolean checkYaml = updateIsSave(saveYaml, getLocaleUtil(Locales.EN_CA).checkString("&a&len-CA locale. &4&lTest String YAML config", "Test comment", "TestPath"));
-		checkYaml = updateIsSave(this.saveYaml, getLocaleUtil(Locales.EN_CA).checkComponent(true, serialize("&a&len-CA locale. &4&lTest JSON string YAML"), "Test comment", "TestComponentPath"));
-		checkYaml = updateIsSave(this.saveYaml, getLocaleUtil(Locales.EN_CA).checkListStrings(Arrays.asList("&a&len-CA locale. &4&lTest Strings YAML config", "String 2"), "Test comment", "TestListPath"));
-		checkYaml = updateIsSave(this.saveYaml,  getLocaleUtil(Locales.EN_CA).checkListComponents(true, Arrays.asList(serialize("&a&len-CA locale. &4&lTest JSON strings YAML config"), serialize("Component String 2")), "Test comment", "TestListComponentsPath"));
-		if(checkYaml) getLocaleUtil(Locales.EN_CA).saveLocaleNode();
+		boolean checkYaml = updateIsSave(saveYaml, getLocaleUtil(Locales.EN_CA).addIfNotExist("&a&len-CA locale. &4&lTest String YAML config", "Test comment", "TestPath"));
+		checkYaml = updateIsSave(this.saveYaml, getLocaleUtil(Locales.EN_CA).addIfNotExist(serialize("&a&len-CA locale. &4&lTest JSON string YAML"), "Test comment", "TestComponentPath"));
+		checkYaml = updateIsSave(this.saveYaml, getLocaleUtil(Locales.EN_CA).addIfNotExist(String.class, Arrays.asList("&a&len-CA locale. &4&lTest Strings YAML config", "String 2"), "Test comment", "TestListPath"));
+		checkYaml = updateIsSave(this.saveYaml,  getLocaleUtil(Locales.EN_CA).addIfNotExist(Component.class, Arrays.asList(serialize("&a&len-CA locale. &4&lTest JSON strings YAML config"), serialize("Component String 2")), "Test comment", "TestListComponentsPath"));
+		if(checkYaml) getLocaleUtil(Locales.EN_CA).save();
 		
 		// Test write and save locale - en-GB.
-		boolean checkJson = updateIsSave(saveJson, getLocaleUtil(Locales.EN_GB).checkString("&a&len-GB locale. &4&lTest String JSON config", null, "TestPath"));
-		checkJson = updateIsSave(this.saveJson, getLocaleUtil(Locales.EN_GB).checkComponent(true, serialize("&a&len-GB locale. &4&lTest JSON string JSON"), null, "TestComponentPath"));
-		checkJson = updateIsSave(this.saveJson, getLocaleUtil(Locales.EN_GB).checkListStrings(Arrays.asList("&a&len-GB locale. &4&lTest Strings JSON config", "String 2"), null, "TestListPath"));
-		checkJson = updateIsSave(this.saveJson,  getLocaleUtil(Locales.EN_GB).checkListComponents(true, Arrays.asList(serialize("&a&len-GB locale. &4&lTest JSON strings JSON config"), serialize("Component String 2")), null, "TestListComponentsPath"));
-		if(checkJson) getLocaleUtil(Locales.EN_GB).saveLocaleNode();
+		boolean checkJson = updateIsSave(saveJson, getLocaleUtil(Locales.EN_GB).addIfNotExist("&a&len-GB locale. &4&lTest String JSON config", null, "TestPath"));
+		checkJson = updateIsSave(this.saveJson, getLocaleUtil(Locales.EN_GB).addIfNotExist(serialize("&a&len-GB locale. &4&lTest JSON string JSON"), null, "TestComponentPath"));
+		checkJson = updateIsSave(this.saveJson, getLocaleUtil(Locales.EN_GB).addIfNotExist(String.class, Arrays.asList("&a&len-GB locale. &4&lTest Strings JSON config", "String 2"), null, "TestListPath"));
+		checkJson = updateIsSave(this.saveJson,  getLocaleUtil(Locales.EN_GB).addIfNotExist(Arrays.asList(serialize("&a&len-GB locale. &4&lTest JSON strings JSON config"), serialize("Component String 2")), null, "TestListComponentsPath"));
+		if(checkJson) getLocaleUtil(Locales.EN_GB).save();
 		
 		// Test write and save locale - ru-RU.
-		boolean checkLegacy = updateIsSave(saveProperties, getLocaleUtil(Locales.RU_RU).checkString("&a&lЛокализация ru-RU. &4&lТест строки конфига PROPERTIES", null, "TestPath", "TestPath2"));
-		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).checkComponent(true, serialize("&a&lЛокализация ru-RU. &4&lТест JSON строки конфига PROPERTIES"), null, "TestComponentPath"));
-		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).checkListStrings(Arrays.asList("&a&lЛокализация ru-RU. &4&lТест строк конфига PROPERTIES", "Строка 2"), null, "TestListPath"));
-		checkLegacy = updateIsSave(this.saveProperties,  getLocaleUtil(Locales.RU_RU).checkListComponents(true, Arrays.asList(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строк конфига PROPERTIES"), serialize("Строка компонент 2")), null, "TestListComponentsPath"));
-		if(checkLegacy) getLocaleUtil(Locales.RU_RU).saveLocaleNode();
+		boolean checkLegacy = updateIsSave(saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist("&a&lЛокализация ru-RU. &4&lТест строки конфига PROPERTIES", null, "TestPath", "TestPath2"));
+		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строки конфига PROPERTIES"), null, "TestComponentPath"));
+		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist(String.class, Arrays.asList("&a&lЛокализация ru-RU. &4&lТест строк конфига PROPERTIES", "Строка 2"), null, "TestListPath"));
+		checkLegacy = updateIsSave(this.saveProperties,  getLocaleUtil(Locales.RU_RU).addIfNotExist(Component.class, Arrays.asList(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строк конфига PROPERTIES"), serialize("Строка компонент 2")), null, "TestListComponentsPath"));
+		if(checkLegacy) getLocaleUtil(Locales.RU_RU).save();
 	}
 
 	private void testRead() {
 		
-		logger.info("Total locales created/saved -> " + api.getPluginLocales(pluginContainer).size());
+		logger.info("Total locales created/saved -> " + locales.size());
 		
 		try {
 			logger.warn("Start test getting ItemStack from config!");
-			ItemStack itemStack = getLocaleUtil(Locales.DEFAULT).getLocaleNode("ItemStack").get(ItemStack.class);
+			ItemStack itemStack = getLocaleUtil(Locales.DEFAULT).getRootNode().node("ItemStack").get(ItemStack.class);
 			SerializedItemStack stack = new SerializedItemStack(itemStack);
 			logger.info(itemStack.get(Keys.CUSTOM_NAME));
 			logger.info(itemStack.get(Keys.ITEM_DURABILITY));
@@ -144,7 +135,7 @@ public class LocaleTest {
 		}
 		//Test writed strings
 		logger.warn("Start test strings! TestPath");
-		logger.info(getLocaleUtil(Locales.DEFAULT).asReference(LocaleConfig.class).getTestPath()); // I deliberately indicated the wrong localization in the code.
+		logger.info(getLocaleUtil(Locales.DEFAULT).toReferenceTranslation(LocaleConfig.class).get().getTestPath()); // I deliberately indicated the wrong localization in the code.
 		logger.info(getString(Locales.EN_CA, "TestPath"));
 		logger.info(getString(Locales.EN_GB, "TestPath"));
 		logger.info(getString(Locales.RU_RU, "TestPath", "TestPath2"));
@@ -154,7 +145,7 @@ public class LocaleTest {
 		//test writed components
 		logger.warn("Start test components! TestComponentPath");
 		logger.info(getComponent(Locales.CA_ES, "TestComponentPath"));
-		logger.info(getLocaleUtil(Locales.EN_CA).asReference(LocaleConfig.class).getTestComponentPath());
+		logger.info(getLocaleUtil(Locales.EN_CA).toReferenceTranslation(LocaleConfig.class).get().getTestComponentPath());
 		logger.info(getComponent(Locales.EN_GB, "TestComponentPath"));
 		logger.info(getComponent(Locales.RU_RU, "TestComponentPath"));
 		
@@ -186,7 +177,7 @@ public class LocaleTest {
 	}
 
 	private PluginLocale getLocaleUtil(Locale locale) {
-		return api.getOrDefaultLocale(pluginContainer, locale);
+		return locales.getLocale(locale);
 	}
 
 	private String getString(Locale locale, Object... path) {
@@ -194,7 +185,7 @@ public class LocaleTest {
 	}
 
 	private List<String> getListStrings(Locale locale, Object... path) {
-		return getLocaleUtil(locale).getListStrings(path);
+		return getLocaleUtil(locale).getList(String.class, path);
 	}
 
 	private Component getComponent(Locale locale, Object... path) {
@@ -202,7 +193,7 @@ public class LocaleTest {
 	}
 
 	private List<Component> getListComponents(Locale locale, Object... path) {
-		return getLocaleUtil(locale).getListComponents(path);
+		return getLocaleUtil(locale).getComponents(path);
 	}
 
 	private boolean updateIsSave(boolean currentResult, boolean check) {

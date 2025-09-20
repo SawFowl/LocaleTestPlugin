@@ -16,13 +16,13 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import sawfowl.localeapi.api.LocaleReference;
 import sawfowl.localeapi.api.TextUtils;
+import sawfowl.localeapi.api.Translation;
 import sawfowl.localeapi.api.serializetools.itemstack.PluginComponent;
 import sawfowl.localeapi.api.serializetools.itemstack.SerializedItemStack;
 
 @ConfigSerializable
-public class LocaleConfig implements LocaleReference {
+public class LocaleConfig implements Translation {
 
 	public LocaleConfig(){}
 

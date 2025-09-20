@@ -29,7 +29,7 @@ tasks.withType(JavaCompile) {
 
 dependencies {
 	implementation "org.spongepowered:spongeapi:${api}"
-	//implementation "com.github.SawFowl:LocaleAPI:5.0"
+	//implementation "com.github.SawFowl:LocaleAPI:6.0"
 	implementation fileTree(dir: 'libs', include: '*.jar')
 }
 
