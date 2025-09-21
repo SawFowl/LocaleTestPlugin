@@ -55,7 +55,7 @@ public class LocaleTest {
 	@Inject
 	public LocaleTest(PluginContainer pluginContainer) {
 		LocaleTest.pluginContainer = pluginContainer;
-		logger = Logger.createJavaLogger("PluginForTestLocales");
+		logger = Logger.createApacheLogger("PluginForTestLocales");
 	}
 
 	@Listener
@@ -63,6 +63,7 @@ public class LocaleTest {
 		api = event.getLocaleService();
 		locales = api.createLocales(pluginContainer);
 		try {
+			api.setDefaultReference(pluginContainer, LocaleConfig.class);
 			api.setItemStackSerializerVariant(pluginContainer, ItemStackSerializerType.JSON);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -80,10 +81,10 @@ public class LocaleTest {
 
 	private void testWrite() {
 		api.setDefaultReference(pluginContainer, LocaleConfig.class);
-		if(!api.localesExist(pluginContainer)) {
+		if(locales.isEmpy()) {
 			// When creating localizations, be sure to create a default localization - Locales.DEFAULT.
 			// If the above check is performed, the localization creation will not be performed because it is unnecessary.
-			locales.createSimpleTranslation(ConfigTypes.HOCON, Locales.DEFAULT);
+			locales.createReferenceTranslation(ConfigTypes.HOCON, Locales.DEFAULT, LocaleConfig.class);
 			locales.createSimpleTranslation(ConfigTypes.YAML, Locales.EN_CA);
 			locales.createSimpleTranslation(ConfigTypes.JSON, Locales.EN_GB);
 			locales.createSimpleTranslation(ConfigTypes.HOCON, Locales.RU_RU);
@@ -102,14 +103,14 @@ public class LocaleTest {
 		boolean checkJson = updateIsSave(saveJson, getLocaleUtil(Locales.EN_GB).addIfNotExist("&a&len-GB locale. &4&lTest String JSON config", null, "TestPath"));
 		checkJson = updateIsSave(this.saveJson, getLocaleUtil(Locales.EN_GB).addIfNotExist(serialize("&a&len-GB locale. &4&lTest JSON string JSON"), null, "TestComponentPath"));
 		checkJson = updateIsSave(this.saveJson, getLocaleUtil(Locales.EN_GB).addIfNotExist(String.class, Arrays.asList("&a&len-GB locale. &4&lTest Strings JSON config", "String 2"), null, "TestListPath"));
-		checkJson = updateIsSave(this.saveJson,  getLocaleUtil(Locales.EN_GB).addIfNotExist(Arrays.asList(serialize("&a&len-GB locale. &4&lTest JSON strings JSON config"), serialize("Component String 2")), null, "TestListComponentsPath"));
+		checkJson = updateIsSave(this.saveJson,  getLocaleUtil(Locales.EN_GB).addIfNotExist(Component.class, Arrays.asList(serialize("&a&len-GB locale. &4&lTest JSON strings JSON config"), serialize("Component String 2")), null, "TestListComponentsPath"));
 		if(checkJson) getLocaleUtil(Locales.EN_GB).save();
 		
 		// Test write and save locale - ru-RU.
-		boolean checkLegacy = updateIsSave(saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist("&a&lЛокализация ru-RU. &4&lТест строки конфига PROPERTIES", null, "TestPath", "TestPath2"));
-		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строки конфига PROPERTIES"), null, "TestComponentPath"));
-		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist(String.class, Arrays.asList("&a&lЛокализация ru-RU. &4&lТест строк конфига PROPERTIES", "Строка 2"), null, "TestListPath"));
-		checkLegacy = updateIsSave(this.saveProperties,  getLocaleUtil(Locales.RU_RU).addIfNotExist(Component.class, Arrays.asList(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строк конфига PROPERTIES"), serialize("Строка компонент 2")), null, "TestListComponentsPath"));
+		boolean checkLegacy = updateIsSave(saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist("&a&lЛокализация ru-RU. &4&lТест строки конфига HOCON. В будущем будет заменено на другой тип конфигурации.", null, "TestPath", "TestPath2"));
+		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строки конфига HOCON. В будущем будет заменено на другой тип конфигурации."), null, "TestComponentPath"));
+		checkLegacy = updateIsSave(this.saveProperties, getLocaleUtil(Locales.RU_RU).addIfNotExist(String.class, Arrays.asList("&a&lЛокализация ru-RU. &4&lТест строк конфига HOCON. В будущем будет заменено на другой тип конфигурации.", "Строка 2"), null, "TestListPath"));
+		checkLegacy = updateIsSave(this.saveProperties,  getLocaleUtil(Locales.RU_RU).addIfNotExist(Component.class, Arrays.asList(serialize("&a&lЛокализация ru-RU. &4&lТест JSON строк конфига HOCON. В будущем будет заменено на другой тип конфигурации."), serialize("Строка компонент 2")), null, "TestListComponentsPath"));
 		if(checkLegacy) getLocaleUtil(Locales.RU_RU).save();
 	}
 
